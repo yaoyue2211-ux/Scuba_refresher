@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>潜前准备 · 小游戏</title>
+<style>
+:root{--or:#ff7a1a;--ac:#4cc3e3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;margin:0;background:#0b2a3a;color:#fff;font:17px/1.5 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+body{display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+#top{display:flex;align-items:center;gap:12px;padding:10px 14px}
+#name{font-weight:700;white-space:nowrap}
+#dots{display:flex;gap:6px;flex:1}
+#dots i{flex:1;height:6px;border-radius:3px;background:#2a4d5e}
+#dots i.on{background:var(--or)}#dots i.done{background:var(--ac)}
+#stage{flex:1;position:relative;margin:0 10px;border-radius:20px;overflow:hidden;min-height:0;color:#0b2a3a}
+.home{background:linear-gradient(#efe1c8,#cfae82)}
+.boat{background:linear-gradient(#9bd8ef 0 30%,#1a7fa8 30% 50%,#e8e0cf 50%)}
+.tank{background:#e6f1f4}.buddy{background:#cfe9f3}
+.water{background:linear-gradient(#a9e0f3 0 40%,#0f6f96 40%)}
+.it{position:absolute;transform:translate(-50%,-50%);font-size:44px;line-height:1.1;text-align:center;transition:all .6s;filter:drop-shadow(0 3px 3px #0004);min-width:64px;min-height:64px}
+.it small{display:block;font-size:13px;color:#0b2a3a;font-weight:600;filter:none}
+.it svg{width:40px;height:44px}
+.it.sel{outline:3px solid var(--or);outline-offset:4px;border-radius:12px}
+.it.mini{font-size:28px;min-width:44px;min-height:44px}.it.mini svg{width:28px;height:30px}.it.mini small{font-size:11px}
+.it.gone{transform:translate(-50%,-50%) scale(.2);opacity:0;pointer-events:none}
+.it.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translate(-60%,-50%)}75%{transform:translate(-40%,-50%)}}
+.slot{position:absolute;transform:translate(-50%,-50%);width:28%;height:20%;border:2.5px dashed #8a7a5a;border-radius:14px;display:flex;align-items:flex-start;justify-content:center;font-size:13px;font-weight:600;padding-top:2px;color:#6a5a3a}
+svg .done{opacity:1}
+[data-id]{cursor:pointer}
+.pulse{animation:p .5s 4;filter:drop-shadow(0 0 8px #ffd34d)}
+@keyframes p{50%{opacity:.35}}
+.panel{position:absolute;left:8%;right:8%;top:12%;background:#fffffff2;border-radius:16px;padding:16px 18px;box-shadow:0 6px 24px #0005;font-size:16px;z-index:3}
+.panel b{display:block;margin-bottom:6px;font-size:18px}.panel ul{margin:0 0 10px;padding-left:20px}
+.pbtn,.big{background:var(--or);color:#fff;border-radius:12px;padding:12px 20px;font-weight:700}
+.big{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);font-size:19px}
+#chips{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:center;gap:8px;z-index:2}
+#chips span{width:44px;height:44px;border-radius:50%;background:#fff;border:3px solid #9bb;display:grid;place-items:center;font-weight:800}
+#chips span.on{background:#2ab07a;border-color:#2ab07a;color:#fff}
+#meter{position:absolute;right:14px;top:10%;height:72%;width:22px;background:#0b2a3a55;border-radius:11px;overflow:hidden}
+#zone{position:absolute;left:0;right:0;bottom:45%;height:25%;background:#2ab07a99}
+#fill{position:absolute;left:0;right:0;bottom:0;background:#fff;opacity:.8;height:8%;transition:height .3s}
+#ctl{position:absolute;left:0;right:0;bottom:4%;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#bar{padding:10px 14px 12px;display:flex;gap:10px;align-items:center}
+#msg{flex:1;min-height:58px;display:flex;align-items:center;background:#12384b;border-radius:14px;padding:8px 14px;font-size:16px;line-height:1.4}
+#msg.ok{background:#1d6b4b}#msg.bad{background:#7a3a12}
+#go{background:var(--or);border-radius:14px;padding:14px 18px;font-weight:700}
+#hint{width:48px;height:48px;border-radius:50%;background:#2a4d5e;font-size:22px}
+#go[hidden]{display:none}
+:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="top"><div id="name"></div><div id="dots"><i></i><i></i><i></i><i></i><i></i></div></div>
+<div id="stage"></div>
+<div id="bar"><button id="hint" aria-label="提示">💡</button><div id="msg"></div><button id="go" hidden>下一幕</button></div>
+
+<script>
+const $=q=>document.querySelector(q),st=$('#stage'),msg=$('#msg'),go=$('#go');
+const FIN='<svg viewBox="0 0 40 44"><g stroke="#a37800" stroke-width="1.5" fill="#f5b800"><path d="M7 2h6l1 12 4 26q-8 4-16 0l4-26z"/><path d="M27 2h6l1 12 4 26q-8 4-16 0l4-26z"/></g><g fill="#333"><path d="M7 2h6l.4 6H6.6z"/><path d="M27 2h6l.4 6h-6.8z"/></g><g stroke="#a37800" stroke-width="1.2"><path d="M10 16v20M5 38h0M30 16v20"/></g></svg>';
+const TANKI='<svg viewBox="0 0 30 50"><rect x="8" y="9" width="14" height="38" rx="7" fill="#6b8a99"/><rect x="12" y="2" width="6" height="8" fill="#c9a227"/></svg>';
+const WATCH='<svg viewBox="0 0 40 44"><rect x="14" y="0" width="12" height="44" rx="3" fill="#444"/><rect x="5" y="9" width="30" height="26" rx="8" fill="#222" stroke="#f5b800" stroke-width="2"/><rect x="9" y="13" width="22" height="18" rx="4" fill="#9fe0f5"/><text x="20" y="26" text-anchor="middle" font-size="10" font-weight="700" fill="#0b2a3a">18m</text></svg>';
+const WET='<svg viewBox="0 0 40 44"><path d="M13 3h14l2 2 8 3-3 20-5-1v-9l-1 0v26h-8V28h-2v14h-8V17l-1 0v10l-5 1L1 8l8-3z" fill="#1d3b52"/><path d="M15 3q5 5 10 0" fill="none" stroke="#4cc3e3" stroke-width="2"/><path d="M20 8v14" stroke="#4cc3e3" stroke-width="2"/></svg>';
+const WEIGHT='<svg viewBox="0 0 40 44"><rect x="1" y="17" width="38" height="9" rx="2" fill="#333"/><rect x="4" y="11" width="11" height="21" rx="2" fill="#8a95a0" stroke="#566" stroke-width="1.5"/><rect x="25" y="11" width="11" height="21" rx="2" fill="#8a95a0" stroke="#566" stroke-width="1.5"/><rect x="17" y="14" width="6" height="15" rx="1" fill="#c9a227"/></svg>';
+let cur=0,hintFn=null;
+function say(t,c){msg.textContent=t;msg.className=c||''}
+function pulse(e){e.classList.add('pulse');setTimeout(()=>e.classList.remove('pulse'),2200)}
+function finish(t){say(t,'ok');go.hidden=false;go.textContent=cur<4?'下一幕':'看结果'}
+function load(k){
+  cur=k;hintFn=null;go.hidden=true;st.className='';st.innerHTML='';st.onclick=null;
+  $('#name').textContent=`${k+1}/5 ${SC[k].n}`;
+  document.querySelectorAll('#dots i').forEach((d,j)=>d.className=j<k?'done':j==k?'on':'');
+  SC[k].run();
+}
+go.onclick=()=>cur<4?load(cur+1):end();
+$('#hint').onclick=()=>hintFn&&hintFn();
+
+/* 通用点按引擎：按顺序，或任意顺序 */
+function seq(steps,done,any){
+  let k=0;const seen=new Set();
+  const all=id=>st.querySelectorAll(`[data-id="${id}"]`);
+  hintFn=()=>{const s=any?steps.find(s=>!seen.has(s.id)):steps[k];s&&all(s.id).forEach(pulse)};
+  st.onclick=e=>{
+    const t=e.target.closest('[data-id]');if(!t)return;const id=t.dataset.id;
+    if(any){
+      const s=steps.find(s=>s.id==id);if(!s||seen.has(id))return;
+      seen.add(id);all(id).forEach(x=>x.classList.add('done'));say(s.ok,'ok');s.fx&&s.fx();
+      if(seen.size==steps.length)done();return;
+    }
+    const s=steps[k];
+    if(id!==s.id){say('先做这一步：'+s.ask,'bad');return}
+    all(id).forEach(x=>x.classList.add('done'));say(s.ok,'ok');s.fx&&s.fx();k++;
+    if(k>=steps.length)done();else setTimeout(()=>say(steps[k].ask),1800);
+  };
+  if(!any)say(steps[0].ask);
+}
+
+/* 小人 SVG */
+const PERSON=`<svg viewBox="0 0 200 300" style="width:100%;height:100%">
+<rect x="72" y="195" width="24" height="90" rx="10" fill="#27506a"/><rect x="104" y="195" width="24" height="90" rx="10" fill="#27506a"/>
+<rect x="68" y="88" width="64" height="112" rx="16" fill="#2b8fb3"/>
+<rect x="50" y="92" width="18" height="80" rx="9" fill="#2b8fb3"/>
+<path d="M132 98 L162 138" stroke="#2b8fb3" stroke-width="18" stroke-linecap="round"/>
+<g data-id="phone"><rect x="150" y="116" width="32" height="52" rx="6" fill="#222"/><rect x="154" y="122" width="24" height="38" rx="3" fill="#6fd0ee"/></g>
+<circle data-id="head" cx="100" cy="52" r="32" fill="#f2c9a0"/><circle cx="89" cy="50" r="3" fill="#222"/><circle cx="111" cy="50" r="3" fill="#222"/><path d="M90 66q10 7 20 0" stroke="#222" stroke-width="3" fill="none"/></svg>`;
+const BUDDY=`<svg viewBox="0 0 200 300" style="width:100%;height:100%">
+<g data-id="F"><rect x="62" y="262" width="34" height="30" rx="4" fill="#f5b800"/><rect x="104" y="262" width="34" height="30" rx="4" fill="#f5b800"/></g>
+<rect x="72" y="195" width="22" height="70" rx="9" fill="#27506a"/><rect x="106" y="195" width="22" height="70" rx="9" fill="#27506a"/>
+<g data-id="B"><rect x="62" y="92" width="76" height="98" rx="16" fill="#ff7a1a"/><path d="M80 98 Q60 60 52 52" stroke="#222" stroke-width="7" fill="none"/></g>
+<g data-id="R"><rect x="70" y="88" width="14" height="22" rx="3" fill="#333"/><rect x="116" y="88" width="14" height="22" rx="3" fill="#333"/></g>
+<g data-id="W"><rect x="60" y="184" width="80" height="20" rx="5" fill="#333"/><rect x="92" y="184" width="16" height="20" fill="#c9a227"/></g>
+<g data-id="A"><circle cx="36" cy="196" r="17" fill="#fff" stroke="#333" stroke-width="4"/><path d="M52 190 Q60 150 70 120" stroke="#333" stroke-width="5" fill="none"/></g>
+<rect x="42" y="96" width="20" height="74" rx="9" fill="#2b8fb3"/><rect x="138" y="96" width="20" height="74" rx="9" fill="#2b8fb3"/>
+<circle cx="100" cy="52" r="32" fill="#f2c9a0"/>
+<g data-id="F"><rect x="72" y="40" width="56" height="26" rx="12" fill="#111" opacity=".85"/><rect x="77" y="45" width="46" height="16" rx="8" fill="#9fe0f5"/></g>
+</svg>`;
+
+/* 1 出发前 */
+function s1(){
+  st.className='home';
+  const L=[['🪪',16,16,'潜水证','潜水证（C 卡）带好了。'],['📒',70,14,'logbook','logbook 放进包里了。'],['🥽',28,40,'面镜','面镜收好，别压变形。'],['FIN',72,40,'脚蹼','脚蹼放进包里。'],['WATCH',20,62,'电脑表','电脑表充好电再带。'],['WET',60,60,'湿衣','湿衣放进包里。'],['🔦',46,28,'手电筒','手电筒带好，出发前检查电池。'],['🍺',84,64,'啤酒','前一晚别喝酒，放下它。']];
+  st.innerHTML=`<div class="it" id="bag" style="left:50%;top:84%;font-size:64px">🎒<small id="cnt">0 / 7</small></div>`;
+  let n=0;
+  L.forEach(([e,x,y,lb,ok])=>{
+    const b=document.createElement('button');b.className='it';b.style.left=x+'%';b.style.top=y+'%';
+    b.innerHTML=(e=='FIN'?FIN:e=='WATCH'?WATCH:e=='WET'?WET:e)+`<small>${lb}</small>`;
+    b.onclick=()=>{
+      if(lb=='啤酒'){b.classList.add('shake');say(ok,'bad');return}
+      b.style.left='50%';b.style.top='84%';b.classList.add('gone');n++;$('#cnt').textContent=n+' / 7';say(ok,'ok');
+      if(n==7)setTimeout(body,900);
+    };
+    st.appendChild(b);
+  });
+  say('家里到处都是东西，点一下，把潜水要带的放进包里');
+  hintFn=()=>{const t=[...st.querySelectorAll('button.it:not(.gone)')].find(b=>!b.textContent.includes('啤酒'));t&&pulse(t)};
+}
+function body(){
+  st.innerHTML=`<div style="position:absolute;inset:4% 20% 0">${PERSON}</div>`;
+  seq([
+    {id:'head',ask:'点小人的头，自查身体：感冒、鼻塞、睡眠、酒精',ok:'没有感冒鼻塞，睡眠足够，昨晚没喝酒 ✓'},
+    {id:'phone',ask:'再点他手里的手机，查潜点浪况、能见度和天气',ok:'浪小、能见度好、天气晴，可以出发 ✓',fx:()=>{
+      const p=document.createElement('div');p.className='panel';p.style.top='4%';p.innerHTML='<b>今日潜点（示例）</b>浪高 0.5 m<br>能见度 15 m<br>天气 晴';st.appendChild(p)}}
+  ],()=>finish('包带齐了，身体和天气也没问题，上船！'));
+}
+
+/* 2 上船 */
+function s2(){
+  st.className='boat';
+  const slots=[['rack',16,80,'气瓶架',26,20],['basket',50,80,'小篮子',38,30],['fins',84,80,'脚蹼区',26,20]];
+  const its=[['tank',TANKI,16,20,'气瓶+BCD','rack','气瓶要立在固定架上，不能乱放，会滚动。'],['mask','🥽',38,14,'面镜','basket','面镜要单独收进小篮子，防止摔落丢失。'],['watch',WATCH,60,14,'电脑表','basket','电脑表也收进小篮子，别丢在甲板。'],['fin',FIN,84,22,'脚蹼','fins','脚蹼放脚蹼区，别挡走道。'],['torch','🔦',38,36,'手电筒','basket','手电筒也放进小篮子，别丢在甲板。'],['weight',WEIGHT,60,36,'配重','basket','配重很重，也放进小篮子，别丢在走道上，防止绊倒。']];
+  let sel=null,placed=0,bn=0;const BP=[[41,73],[59,73],[41,87],[59,87]];const pos={};
+  slots.forEach(([id,x,y,lb,w,h])=>{const d=document.createElement('div');d.className='slot';d.style.left=x+'%';d.style.top=y+'%';d.style.width=w+'%';d.style.height=h+'%';d.textContent=lb;
+    d.onclick=()=>{
+      if(!sel){say('先点一件装备，再点它该去的位置');return}
+      const it=sel.it;
+      if(it[5]!=id){say(it[6],'bad');return}
+      let dx=x,dy=y-4;if(id=='basket'){[dx,dy]=BP[bn++]}
+      sel.el.style.left=dx+'%';sel.el.style.top=dy+'%';sel.el.classList.remove('sel');sel.el.classList.add('mini');sel.el.disabled=true;sel=null;placed++;say('放好了 ✓','ok');
+      if(placed==6){say('装备都放好了，点导潜，听潜前简报');g.disabled=false;pulse(g)}
+    };st.appendChild(d)});
+  its.forEach(it=>{const b=document.createElement('button');b.className='it';b.style.left=it[2]+'%';b.style.top=it[3]+'%';
+    b.innerHTML=(it[1].length>3?it[1]:it[1])+`<small>${it[4]}</small>`;
+    b.onclick=()=>{if(b.disabled)return;st.querySelectorAll('.it.sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel={el:b,it};say('选了「'+it[4]+'」，点它该放的位置')};
+    st.appendChild(b)});
+  const g=document.createElement('button');g.className='it';g.style.left='84%';g.style.top='50%';g.innerHTML='🧑‍✈️<small>导潜</small>';g.disabled=true;
+  g.onclick=()=>{if(g.disabled){say('先把装备放好','bad');return}
+    const p=document.createElement('div');p.className='panel';
+    p.innerHTML='<b>潜前简报</b><ul><li>最大深度、潜水时间</li><li>入水和出水方式</li><li>常用手势</li><li>紧急集合点</li></ul>没听清就当场问。<br><br><button class="pbtn">听完了</button>';
+    p.querySelector('button').onclick=()=>{p.remove();finish('简报听完了，开始组装装备')};st.appendChild(p)};
+  st.appendChild(g);
+  say('把装备放到固定位置：先点装备，再点位置');
+  hintFn=()=>{const t=[...st.querySelectorAll('button.it:not(:disabled)')][0];t&&pulse(t)};
+}
+
+/* 3 装备组装 */
+function s3(){
+  st.className='tank';
+  st.innerHTML=`<svg viewBox="0 0 300 420" style="width:100%;height:100%">
+  <path d="M82 92 Q150 70 218 92 L228 336 Q150 356 72 336Z" fill="#ff7a1a"/>
+  <rect x="112" y="58" width="76" height="300" rx="36" fill="#7d9aa8"/>
+  <g data-id="strap"><rect id="s1" x="96" y="150" width="108" height="14" rx="4" fill="#333"/><rect id="s2" x="96" y="250" width="108" height="14" rx="4" fill="#333"/></g>
+  <g data-id="valve"><circle id="kn" cx="150" cy="22" r="13" fill="#444" style="transform-origin:150px 22px;transition:transform .6s"/><rect x="144" y="16" width="12" height="6" fill="#aaa"/></g>
+  <g data-id="reg"><rect id="fs" x="126" y="38" width="48" height="26" rx="6" fill="#c9a227" opacity=".35" stroke="#7a6414" stroke-width="2" stroke-dasharray="5 3"/></g>
+  <g class="late" style="opacity:.12">
+  <path d="M130 56 Q60 80 48 140" stroke="#222" stroke-width="5" fill="none"/>
+  <g data-id="gauge"><circle cx="48" cy="156" r="28" fill="#fff" stroke="#333" stroke-width="4"/><text id="gv" x="48" y="162" text-anchor="middle" font-size="18" font-weight="700" fill="#0b2a3a">0</text></g>
+  <path d="M170 56 Q250 60 244 120" stroke="#222" stroke-width="5" fill="none"/>
+  <g data-id="breathe"><circle cx="244" cy="132" r="20" fill="#2b8fb3" stroke="#0b2a3a" stroke-width="3"/></g>
+  <path d="M172 60 Q280 100 262 180" stroke="#e5c100" stroke-width="5" fill="none"/>
+  <g data-id="octo"><circle cx="262" cy="194" r="16" fill="#f5d000" stroke="#7a6414" stroke-width="3"/></g>
+  <g data-id="inflate"><path d="M130 62 Q96 70 96 104" stroke="#222" stroke-width="12" stroke-linecap="round" fill="none"/><rect x="86" y="100" width="20" height="16" rx="4" fill="#111"/></g>
+  </g></svg>`;
+  const late=()=>st.querySelectorAll('.late').forEach(x=>x.style.opacity=1);
+  seq([
+    {id:'strap',ask:'固定气瓶：点气瓶上的绑带',ok:'绑带扣紧，气瓶位置不高不低 ✓',fx:()=>{$('#s1').setAttribute('fill','#1e8e5a');$('#s2').setAttribute('fill','#1e8e5a')}},
+    {id:'reg',ask:'接调节器：点气瓶顶部的接口',ok:'接好了，二级头朝向右手侧 ✓',fx:()=>{late();const f=$('#fs');f.setAttribute('opacity',1);f.removeAttribute('stroke-dasharray')}},
+    {id:'valve',ask:'压力表朝向自己，点气阀慢慢打开',ok:'气阀开满了 ✓',fx:()=>{$('#kn').style.transform='rotate(360deg)';$('#gv').textContent='210'}},
+    {id:'valve',ask:'再点一次气阀，回半圈，防止卡死',ok:'回半圈 ✓ 这是最容易忘的细节',fx:()=>{$('#kn').style.transform='rotate(180deg)'}},
+    {id:'gauge',ask:'点压力表，看气量',ok:'210 bar，气量够 ✓'},
+    {id:'breathe',ask:'点主二级头，做呼吸测试',ok:'吸呼都顺畅 ✓'},
+    {id:'octo',ask:'点黄色备用二级头，也试一下',ok:'备用二级头也能呼吸 ✓'},
+    {id:'inflate',ask:'点低压充气管，检查能充能排',ok:'能充气也能排气 ✓'}
+  ],()=>finish('装备组装完成，找同伴互相检查'));
+}
+
+/* 4 同伴检查 */
+function s4(){
+  st.className='buddy';
+  st.innerHTML=`<div id="chips"><span>B</span><span>W</span><span>R</span><span>A</span><span>F</span></div><div style="position:absolute;inset:60px 20% 0">${BUDDY}</div>`;
+  const chip=l=>()=>[...st.querySelectorAll('#chips span')].find(s=>s.textContent==l).classList.add('on');
+  say('面对面，逐个点同伴身上的 BWRAF，顺序不限');
+  seq([
+    {id:'B',ok:'B：BCD 能充气能排气，口吹充气管也能用 ✓',fx:chip('B')},
+    {id:'W',ok:'W：配重位置到位，知道在哪里抛 ✓',fx:chip('W')},
+    {id:'R',ok:'R：释放扣互相看清怎么解 ✓',fx:chip('R')},
+    {id:'A',ok:'A：气阀全开，压力够，两个二级头都能呼吸 ✓',fx:chip('A')},
+    {id:'F',ok:'F：面镜、脚蹼、电脑表设置好，整体检查 ✓',fx:chip('F')}
+  ],()=>finish('BWRAF 互相确认完成，准备入水'),true);
+  say('面对面，逐个点同伴身上的 BWRAF，顺序不限');
+}
+
+/* 5 入水 */
+function s5(){
+  st.className='boat';
+  st.innerHTML='<div class="it" style="left:50%;top:42%;font-size:72px">🧍</div><button class="big" id="jump">跨步入水</button>';
+  say('先看四周和下方有没有人，再点「跨步入水」');
+  hintFn=()=>pulse($('#jump'));
+  $('#jump').onclick=()=>{
+    st.className='water';let lv=8,ready=false;
+    st.innerHTML='<div class="it" id="dv" style="left:50%;font-size:72px">🤿</div><div id="meter"><div id="zone"></div><div id="fill"></div></div><div id="ctl"><button class="pbtn" id="up">给 BCD 充气</button><button class="pbtn" id="dn" style="background:#2a6a86">排气</button><button class="pbtn" id="ok" hidden style="background:#2ab07a">👌 打 OK</button></div>';
+    const upd=()=>{
+      $('#dv').style.top=(70-lv*.4)+'%';$('#fill').style.height=lv+'%';
+      const z=lv>=45&&lv<=70;$('#ok').hidden=!z;
+      say(lv<45?'还在下沉，给 BCD 充一点气':z?'正浮力：头和肩在水面上，可以打 OK':'充太多了，会冲出水面，排一点气',z?'ok':lv<45?'':'bad');
+    };
+    $('#up').onclick=()=>{if(!ready){lv=Math.min(100,lv+12);upd()}};
+    $('#dn').onclick=()=>{if(!ready){lv=Math.max(0,lv-12);upd()}};
+    $('#ok').onclick=()=>{ready=true;$('#ctl').style.display='none';
+      const b=document.createElement('div');b.className='it';b.style.cssText='left:-12%;top:46%;font-size:72px';b.textContent='🤿';st.appendChild(b);
+      setTimeout(()=>b.style.left='25%',50);say('向船和导潜打了 OK，同伴游过来集合……');
+      setTimeout(()=>finish('同伴集合完毕，保持正浮力，一起出发！'),1800)};
+    hintFn=()=>pulse(lv<45?$('#up'):lv>70?$('#dn'):$('#ok'));
+    upd();say('入水后立刻向船打 OK，给 BCD 适量充气，保持正浮力');
+  };
+}
+
+function end(){
+  document.querySelectorAll('#dots i').forEach(d=>d.className='done');$('#name').textContent='完成';
+  go.hidden=true;hintFn=null;st.className='water';st.onclick=null;
+  st.innerHTML='<div class="panel" style="top:10%"><b>准备完成</b><ul><li>证件、装备、身体和天气，都确认过</li><li>装备放好，简报听完</li><li>气瓶组装，开气阀回半圈，看压力表，试二级头</li><li>BWRAF 同伴检查</li><li>入水后保持正浮力，等同伴集合</li></ul>久未潜水，请先做一次 refresher。<br><br><button class="pbtn" id="again">再玩一次</button></div>';
+  $('#again').onclick=()=>load(0);say('这个小游戏只帮你回忆流程，不能代替教练指导和实操训练。');
+}
+const SC=[{n:'出发前',run:s1},{n:'上船',run:s2},{n:'装备组装',run:s3},{n:'同伴检查',run:s4},{n:'入水',run:s5}];
+load(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>久未潜水 · 复习卡</title>
+<style>
+:root{--bg:#eef5f7;--card:#fff;--ink:#0b2a3a;--sub:#4b6b7a;--line:#cfe0e6;--accent:#0a6f8f;--accent2:#ff7a1a;--warn:#fff1e0;--warnink:#8a3d00;--tip:#e3f4f8}
+@media (prefers-color-scheme:dark){:root{--bg:#06141c;--card:#0d2430;--ink:#e6f2f6;--sub:#8fb0bd;--line:#1d4152;--accent:#4cc3e3;--accent2:#ffa24d;--warn:#3a2410;--warnink:#ffc999;--tip:#10303d}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+header{padding:12px 16px 8px;display:flex;align-items:center;gap:12px}
+header .t{flex:1;font-weight:700}
+header small{display:block;color:var(--sub);font-weight:400;font-size:13px}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{border:1.5px solid var(--accent);background:transparent;color:var(--accent);border-radius:12px;padding:10px 16px;font-weight:600}
+.btn:focus-visible,.nav button:focus-visible,li label:focus-within{outline:3px solid var(--accent2);outline-offset:2px}
+.gauge{margin:0 16px;height:34px;position:relative}
+.gauge .line{position:absolute;left:0;right:0;top:16px;height:3px;background:var(--line);border-radius:2px}
+.gauge .fill{position:absolute;left:0;top:16px;height:3px;background:var(--accent);border-radius:2px;transition:width .3s}
+.gauge .dot{position:absolute;top:8px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--accent2);border:3px solid var(--bg);transition:left .3s}
+.gauge .d{position:absolute;right:0;top:-2px;font-size:12px;color:var(--sub)}
+main{flex:1;overflow:auto;padding:8px 16px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 20px;max-width:640px;margin:0 auto}
+h1{font-size:26px;line-height:1.3;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 16px}
+ul.chk{list-style:none;padding:0;margin:0 0 16px}
+li label{display:flex;gap:14px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+li:last-child label{border-bottom:0}
+input[type=checkbox]{width:26px;height:26px;flex:none;margin-top:1px;accent-color:var(--accent)}
+li input:checked+span{color:var(--sub);text-decoration:line-through}
+.box{border-radius:14px;padding:12px 14px;margin-top:12px;font-size:16px}
+.tip{background:var(--tip);border-left:5px solid var(--accent)}
+.warn{background:var(--warn);color:var(--warnink);border-left:5px solid var(--accent2)}
+.box b{display:block}
+.nav{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0));background:var(--bg)}
+.nav button{flex:1;padding:16px;border-radius:14px;border:0;font-weight:700;font-size:18px;background:var(--accent);color:#fff}
+.nav button.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.nav button:disabled{opacity:.35}
+footer{font-size:12px;color:var(--sub);text-align:center;padding:0 16px calc(8px + env(safe-area-inset-bottom,0))}
+#menu{position:fixed;inset:0;background:var(--bg);z-index:5;overflow:auto;padding:calc(16px + env(safe-area-inset-top,0)) 16px 24px;display:none}
+#menu.on{display:block}
+#menu h2{font-size:15px;color:var(--sub);margin:18px 0 8px}
+#menu button.row{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:8px}
+.gest{display:flex;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.gest:last-child{border-bottom:0}
+.gest i{font-style:normal;font-size:30px;width:44px;text-align:center}
+.gest b{display:block}.gest span{color:var(--sub);font-size:15px}
+.flip{background:var(--tip);border:1.5px solid var(--line);border-radius:18px;min-height:180px;padding:22px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:19px;width:100%;margin:10px 0 14px}
+.flip.back{background:var(--card);border-color:var(--accent)}
+.row2{display:flex;gap:10px}.row2 .btn{flex:1}
+.tag{display:inline-block;background:var(--tip);border-radius:8px;padding:2px 10px;font-size:14px;color:var(--accent);margin-bottom:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="t" id="title">久未潜水 · 复习卡<small id="sub"></small></div>
+  <button class="btn" id="mbtn" aria-label="打开目录">目录</button>
+</header>
+<div class="gauge" id="gauge"><div class="line"></div><div class="fill" id="fill"></div><div class="dot" id="dot"></div><div class="d" id="depth"></div></div>
+<main id="main"></main>
+<div class="nav" id="nav"><button class="ghost" id="prev">上一步</button><button id="next">下一步</button></div>
+<footer>本页面仅作复习辅助，不能代替教练指导和实操训练。</footer>
+<div id="menu"></div>
+
+<script>
+const STAGES=[
+{n:"出发前",s:"证件、身体、装备、天气，先确认再出门",d:0,
+ c:["带好潜水证（C 卡）和 logbook","身体自查：感冒、鼻塞、睡眠不足、前一晚饮酒，都不适合下水","对照清单带齐装备：面镜、脚蹼、潜水电脑表、湿衣、手电筒、配重习惯","查潜点、浪况、能见度和天气"],
+ tip:"久未潜水请先联系潜店或教练，安排一次 refresher，再选条件温和的潜点。"},
+{n:"上船",s:"位置放好，听清简报",d:0,
+ c:["装备放在固定位置，面镜、电脑表、手电筒和配重放进小篮子，防止摔落或丢失","晕船的人提前吃药，上船前别空腹","听潜前简报：最大深度、潜水时间、入水和出水方式","确认手势、紧急集合点和导潜的安排"],
+ tip:"没听清的地方当场问。简报里的数字是上限，不要拿来挑战。"},
+{n:"装备组装",s:"气瓶、BCD、调节器，一步一步来",d:2,
+ c:["气瓶固定在 BCD 上，位置不要太高也不要太低，绑带扣紧","接上调节器，二级头朝向右手侧，确认接口无损","先把压力表朝向自己，再慢慢打开气阀，开满后回半圈","看压力表，气量要够，一般开始前不低于 200 bar","呼吸测试：吸呼都顺畅，同时检查备用二级头","检查低压充气管：接头牢固，能充能排"],
+ tip:"气阀开满再回半圈，这是最容易忘的细节。开气时压力表别对着人脸。",
+ warn:"调节器若有漏气、咬嘴破损或呼吸费力，换一套，不要将就。"},
+{n:"同伴检查",s:"BWRAF，互相确认",d:4,
+ c:["B（BCD）：能充气、能排气，口吹充气管也能用","W（配重）：位置到位，知道在哪里抛","R（释放扣）：BCD、配重带的扣子互相看清怎么解","A（空气）：气阀全开，压力够，两个二级头都能呼吸","F（最后检查）：面镜、脚蹼、潜水电脑表设置好，整体外观检查"],
+ tip:"久未潜水，配重往往要重新估算，先在水面试浮力，再调整。"},
+{n:"入水",s:"稳稳进去，先在水面确认",d:6,
+ c:["跨步式入水：看脚下和周围，一手压面镜和咬嘴，一手按住装备","后滚翻入水：坐在船边，下巴收紧，抱住装备往后翻","入水后立刻向船和导潜打 OK 信号","水面给 BCD 适量充气，保持正浮力，等同伴集合"],
+ tip:"入水前先确认下方没人，再入水。",
+ warn:"入水前要排尽 BCD 里的空气或按要求充气，别以为在水面不需要。"},
+{n:"下潜",s:"慢下去，耳朵优先",d:10,
+ c:["排气下潜，用脚先下，沿着绳或参照物","边下边做耳压平衡，不要等到耳朵痛才做","耳朵压不开就停下、上升一点再试，不要硬压","下到底先停一下：检查装备、浮力、同伴位置、气压"],
+ tip:"耳朵出问题不要硬下去，中止潜水比受伤好。"},
+{n:"水下",s:"监控气压、深度、时间",d:18,
+ c:["每 5 分钟看一次压力表、深度和无减压极限","和同伴保持在能互相看见的距离","保持中性浮力，不碰珊瑚、不踩水底","到约 50 bar 就开始计划往回走，别等到最后","保持呼吸平稳，不要憋气"],
+ tip:"气量按“导潜先到 50 bar 的人”为准，不要比谁用气少。",
+ warn:"出现头晕、气不够、装备异常时，打手势，和同伴一起上升。"},
+{n:"上升与安全停留",s:"慢慢上来，停三分钟",d:5,
+ c:["上升速度不超过 9 米每分钟，一般跟着最小的气泡走","举一只手向上，另一只手握排气阀，观察上方","在 5 米处做 3 分钟安全停留","到水面后给 BCD 充气，打信号"],
+ tip:"潜水电脑表如果有上升速度警示，立刻减慢。",
+ warn:"紧急情况（没气）：打手势，共用气源上升，或紧急游泳上升，边上升边呼出。"},
+{n:"出水后",s:"安全上船，整理和记录",d:0,
+ c:["在水面确认同伴，排气，然后靠近船边","先递装备再上船，或按船员指示操作","当天记录 logbook：地点、深度、时间、气量、备注","装备用淡水冲洗，晾干，气瓶和调节器别留水","潜后 12 到 24 小时内不要坐飞机"],
+ tip:"当天记录下来，下次就知道自己的用气习惯。"}
+];
+const SKILLS=["清面镜","找回二级头","紧急游泳上升","中性浮力","共用气源"];
+const LAYOFF=[["半年以内","先找潜店做一次简短的技能复习，选浅水、条件温和的潜点。"],["半年到一年","强烈建议做 refresher：水面技能加水下技能，配重重新估算。"],["一年以上","请先做完整的 refresher，必要时重修一部分课程。别直接上船潜深水。"],["两年以上","建议向教练咨询是否需要重新上课，再决定复习或重修。"]];
+const GESTURES=[["👌","OK","一切正常"],["👍","上升","往上，结束或上升"],["👎","下降","往下，开始下潜"],["✋","停","停下，等一下"],["☝️","慢","一个手掌向下压，放慢"],["🆘","有问题","手掌平放左右摆动：有点问题"],["✂️","没气了","手掌放在脖子前横划"],["🤝","共用气源","手指向嘴，然后指向同伴的备用二级头"],["🔦","看","两根手指指眼睛，再指向目标"],["⬆️5","5 米停留","手掌平放表示停，再比数字 5 和 3 分钟"]];
+const CARDS=[["如何开气阀？","全开后再回半圈，防止卡死，也方便判断是否开着。"],["BWRAF 是什么？","BCD、配重、释放扣、空气、最后检查。"],["上升速度上限？","不超过 9 米每分钟。"],["安全停留标准做法？","5 米停 3 分钟。"],["耳朵压不开怎么办？","停下，上升一点再试，不能硬压。"],["气压到多少开始返程？","约 50 bar，导潜先到 50 的人为准。"],["没气的紧急办法？","打手势共用气源，必要时紧急游泳上升并呼气。"],["潜后飞行间隔？","一般潜后 12 到 24 小时内不要坐飞机。"]];
+
+let view="stage",i=0,ci=0,flipped=false,chk={};
+try{chk=JSON.parse(localStorage.getItem("dive_chk")||"{}");i=+(localStorage.getItem("dive_i")||0)||0}catch(e){}
+if(i<0||i>=STAGES.length)i=0;
+const $=id=>document.getElementById(id);
+function save(){try{localStorage.setItem("dive_chk",JSON.stringify(chk));localStorage.setItem("dive_i",i)}catch(e){}}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+
+function render(){
+  const m=$("main");$("menu").classList.remove("on");
+  const stage=view==="stage";
+  $("gauge").style.display=stage?"":"none";
+  $("nav").style.display=(stage||view==="cards")?"":"none";
+  if(stage){
+    const s=STAGES[i];
+    $("sub").textContent=`${i+1} / ${STAGES.length}  ${s.n}`;
+    $("fill").style.width=($("dot").style.left=(i/(STAGES.length-1)*100)+"%");
+    $("depth").textContent=`约 ${s.d} 米`;
+    m.innerHTML=`<div class="card"><h1>${s.n}</h1><p class="lead">${s.s}</p><ul class="chk">${s.c.map((t,k)=>{const key=i+"-"+k;return `<li><label><input type="checkbox" data-k="${key}" ${chk[key]?"checked":""}><span>${esc(t)}</span></label></li>`}).join("")}</ul>${s.tip?`<div class="box tip"><b>容易忘</b>${s.tip}</div>`:""}${s.warn?`<div class="box warn"><b>安全提醒</b>${s.warn}</div>`:""}</div>`;
+    m.querySelectorAll("input").forEach(el=>el.onchange=()=>{chk[el.dataset.k]=el.checked;save()});
+    $("prev").disabled=i===0;$("next").disabled=i===STAGES.length-1;
+    $("prev").textContent="上一步";$("next").textContent="下一步";
+  }else if(view==="layoff"){
+    $("sub").textContent="久未潜水专区";
+    m.innerHTML=`<div class="card"><h1>很久没潜了</h1><p class="lead">离开越久，越要先做 refresher。</p>${LAYOFF.map(l=>`<div class="box tip"><b>${l[0]}</b>${l[1]}</div>`).join("")}<h2 style="font-size:19px;margin:22px 0 4px">技能复习清单</h2><ul class="chk">${SKILLS.map((t,k)=>{const key="sk-"+k;return `<li><label><input type="checkbox" data-k="${key}" ${chk[key]?"checked":""}><span>${t}</span></label></li>`}).join("")}</ul><div class="box warn"><b>安全提醒</b>这个页面只帮你回忆，技能一定要在教练带领下实际练一遍。</div></div>`;
+    m.querySelectorAll("input").forEach(el=>el.onchange=()=>{chk[el.dataset.k]=el.checked;save()});
+  }else if(view==="gest"){
+    $("sub").textContent="手势速查";
+    m.innerHTML=`<div class="card"><h1>常用手势</h1><p class="lead">具体以潜前简报为准。</p>${GESTURES.map(g=>`<div class="gest"><i>${g[0]}</i><div><b>${g[1]}</b><span>${g[2]}</span></div></div>`).join("")}</div>`;
+  }else{
+    $("sub").textContent=`自测闪卡 ${ci+1} / ${CARDS.length}`;
+    m.innerHTML=`<div class="card"><span class="tag">点卡片翻面</span><button class="flip ${flipped?"back":""}" id="fl">${esc(flipped?CARDS[ci][1]:CARDS[ci][0])}</button></div>`;
+    $("fl").onclick=()=>{flipped=!flipped;render()};
+    $("prev").textContent="上一张";$("next").textContent="下一张";
+    $("prev").disabled=ci===0;$("next").disabled=ci===CARDS.length-1;
+  }
+  m.scrollTop=0;
+}
+function go(d){
+  if(view==="stage"){i=Math.max(0,Math.min(STAGES.length-1,i+d));save()}
+  else if(view==="cards"){ci=Math.max(0,Math.min(CARDS.length-1,ci+d));flipped=false}
+  render();
+}
+$("prev").onclick=()=>go(-1);$("next").onclick=()=>go(1);
+function openMenu(){
+  const mm=$("menu");
+  mm.innerHTML=`<button class="btn" id="mc">关闭</button><h2>流程</h2>${STAGES.map((s,k)=>`<button class="row" data-s="${k}">${k+1}　${s.n}</button>`).join("")}<h2>其他</h2><button class="row" data-v="layoff">久未潜水专区</button><button class="row" data-v="gest">手势速查</button><button class="row" data-v="cards">自测闪卡</button><button class="row" data-r="1">清除所有勾选</button>`;
+  mm.classList.add("on");
+  $("mc").onclick=()=>mm.classList.remove("on");
+  mm.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{view="stage";i=+b.dataset.s;save();render()});
+  mm.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{view=b.dataset.v;ci=0;flipped=false;render()});
+  mm.querySelector("[data-r]").onclick=()=>{if(confirm("确定清除所有勾选？")){chk={};save();render()}};
+}
+$("mbtn").onclick=openMenu;
+let x0=null;
+document.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true});
+document.addEventListener("touchend",e=>{if(x0===null||$("menu").classList.contains("on"))return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>70&&(view==="stage"||view==="cards"))go(dx<0?1:-1)},{passive:true});
+render();
+</script>
+</body>
+</html>
